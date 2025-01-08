@@ -78,12 +78,10 @@ control 'SV-250316' do
   # TODO: refactor this with the pam resource
   describe file('/etc/pam.d/password-auth') do
     its('content') {
-      should match(/auth\s+required\s+pam_faillock.so preauth
-    dir=#{input('non_default_tally_dir')}/)
+      should match(/auth\s+required\s+pam_faillock.so\s+preauth\s+dir=#{input('non_default_tally_dir')}/)
     }
     its('content') {
-      should match(/auth\s+required\s+pam_faillock.so authfail
-    dir=#{input('non_default_tally_dir')}/)
+      should match(/auth\s+required\s+pam_faillock.so\s+authfail\s+dir=#{input('non_default_tally_dir')}/)
     }
   end
 
