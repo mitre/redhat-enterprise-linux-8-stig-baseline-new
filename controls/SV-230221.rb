@@ -51,7 +51,7 @@ If the release is not supported by the vendor, this is a finding.'
   release = os.release
 
   EOMS_DATE = {
-    /^8\.1/ => '30 November 2021',
+    /^8\.1$/ => '30 November 2021',
     /^8\.2/ => '30 April 2022',
     /^8\.3/ => '30 April 2021',
     /^8\.4/ => '31 May 2023',
