@@ -441,10 +441,16 @@ inputs:
     value: "aide"
 
   # SV-230484
-  - name: authoritative_timeserver
-    description: Timeserver used in /etc/chrony.conf
-    type: String
-    value: 0.us.pool.ntp.mil
+  - name: authoritative_timeservers
+    description: Timeserver(s) used in /etc/chrony.conf
+    type: Array
+    value: ["0.us.pool.ntp.mil"]
+  
+  # SV-230484
+  - name: authoritative_timeservers_exact
+    description: Specify that all timeservers in authoritative_timeservers must be present and valid
+    type: Boolean
+    value: false
 
   # SV-230537
   - name: non_removable_media_fs

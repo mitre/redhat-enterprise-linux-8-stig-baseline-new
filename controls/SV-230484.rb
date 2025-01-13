@@ -72,15 +72,25 @@ the following line in the /etc/chrony.conf file.
   only_if('This control is Not Applicable to containers', impact: 0.0) {
     !virtualization.system.eql?('docker')
   }
-  # No need to provide filepath
-  time_sources = chrony_conf.server
 
-  # Cover case when a single server is defined and resource returns a string and not an array
-  time_sources = [time_sources] if time_sources.is_a? String
+  # Get inputs
+  authoritative_timeservers = input('authoritative_timeservers')
+  authoritative_timeservers_exact = input('authoritative_timeservers_exact')
 
+  # Get the system server values
+  # Converts to array if only one value present
+  time_sources = [chrony_conf.server].flatten
+
+  # Get and map maxpoll values to an array
   unless time_sources.nil?
+    # Map max poll values only
     max_poll_values = time_sources.map { |val|
       val.match?(/.*maxpoll.*/) ? val.gsub(/.*maxpoll\s+(\d+)(\s+.*|$)/, '\1').to_i : 10
+    }
+
+    # Map server values only
+    server_values = time_sources.map { |val|
+      val.split(' ').first
     }
   end
 
@@ -89,27 +99,23 @@ the following line in the /etc/chrony.conf file.
     its('server') { should_not be_nil }
   end
 
-  unless chrony_conf.server.nil?
-    # If there is only one server and the resource returns a string, check if the server matches the input
-    if chrony_conf.server.is_a? String
-      describe chrony_conf do
-        its('server') { should match input('authoritative_timeserver') }
-      end
-    end
-    # Check if each server in the server array exists in the input
-    if chrony_conf.server.is_a? Array
-      chrony_conf.server.each do |server|
-        describe server do
-          it { should match input('authoritative_timeserver') }
+  unless time_sources.nil?
+    # Verify the chrony.conf file is configured to at least one authoritative DoD time source
+    # Check for valid maxpoll value <17
+    describe 'chrony.conf' do
+      # authoritative_timeservers_exact specifies whether to verify all inputted timeservers or just one
+      if authoritative_timeservers_exact
+        it 'should include all specified valid timeservers' do
+          expect(authoritative_timeservers.all? { |input|
+                   server_values.include?(input) && max_poll_values[server_values.index(input)] < 17
+                 }).to be true
         end
-      end
-    end
-
-    # All time sources must contain valid maxpoll entries
-    unless time_sources.nil?
-      describe 'chronyd maxpoll values (99=maxpoll absent)' do
-        subject { max_poll_values }
-        it { should all be < 17 }
+      else
+        it 'should include at least one valid timeserver' do
+          expect(authoritative_timeservers.any? { |input|
+            server_values.include?(input) && max_poll_values[server_values.index(input)] < 17
+          }).to be true
+        end
       end
     end
   end
